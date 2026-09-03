@@ -3,15 +3,19 @@ const cors = require('cors');
 const path = require('path');
 const fs = require('fs');
 const dotenv = require('dotenv');
+const { initDatabase } = require('./database/database');
 
 dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// Enable CORS for development
+// Auto-initialize SQLite database schema on startup
+initDatabase().catch(err => console.error('❌ Database Initialization Error:', err));
+
+// Enable CORS for development & production origins
 app.use(cors({
-  origin: ['http://localhost:5173', 'http://127.0.0.1:5173', 'http://localhost:5000'],
+  origin: ['http://localhost:5173', 'http://127.0.0.1:5173', 'http://localhost:5000', '*'],
   credentials: true
 }));
 
@@ -42,7 +46,7 @@ app.use('/api/failures', require('./routes/failureRoutes'));
 app.use('/api/experiments', require('./routes/experimentRoutes'));
 app.use('/api/audit-logs', require('./routes/auditRoutes'));
 
-// Serve Combined Single Localhost Frontend (React/Vite Production Build)
+// Serve Combined Frontend (React/Vite Production Build)
 const distPath = path.join(__dirname, '../dist');
 if (fs.existsSync(distPath)) {
   app.use(express.static(distPath));
@@ -62,8 +66,8 @@ app.use(require('./middleware/errorHandler'));
 // Start Express Combined Server
 app.listen(PORT, () => {
   console.log(`==================================================`);
-  console.log(`🚀 CrisisConnect Combined Single Localhost Server Active!`);
-  console.log(`🌐 SINGLE LOCALHOST LINK: http://localhost:${PORT}`);
+  console.log(`🚀 CrisisConnect Combined Server Active!`);
+  console.log(`📡 Server Listening on Port: ${PORT}`);
   console.log(`🗄️ Database: SQLite (backend/database/crisisconnect.db)`);
   console.log(`==================================================`);
 });
